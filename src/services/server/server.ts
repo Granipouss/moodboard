@@ -29,4 +29,10 @@ export class Server {
     this.server.close();
     this.subject.complete();
   }
+
+  public waitForRequest() {
+    return new Promise<ParsedUrlQuery>(resolve => {
+      this.subject.subscribe(query => resolve(query));
+    });
+  }
 }
