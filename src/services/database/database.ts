@@ -19,7 +19,7 @@ export class Database {
     return new Database(connection);
   }
 
-  private constructor(private connection: Connection) {}
+  public constructor(private connection: Connection) {}
 
   private constantRepo = this.connection.getRepository(Constant);
   public imageRepo = this.connection.getRepository(Image);

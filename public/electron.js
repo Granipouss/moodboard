@@ -15,6 +15,7 @@ function createWindow() {
     height: 600,
   });
 
+  mainWindow.setMenu(null);
   mainWindow.loadURL(
     isDev
       ? 'http://localhost:3000'

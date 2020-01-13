@@ -1,26 +1,51 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { lazy, Suspense, useEffect } from 'react';
 
-const App: React.FC = () => {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+import {
+  HashRouter as Router,
+  Switch,
+  Route,
+  Redirect,
+} from 'react-router-dom';
+
+import { Database } from './services/database';
+import { ServiceProvider } from './hooks/useService';
+import { ImageProvider } from './hooks/useImages';
+import { withProps, nest } from './libs/hocUtils';
+import { resumeCollection } from './libs/connectorUtils';
+import Loader from './components/Loader';
+import { GlobalStyleProvider } from './components/GlobalStyleProvider';
+
+const Routes = {
+  '/connectors': () => import('./components/ConnectorScreen'),
+  '/gallery/:index?': () => import('./components/GalleryScreen'),
+  '/view/:index': () => import('./components/FullViewScreen'),
 };
+
+const App: React.FC = nest(
+  GlobalStyleProvider,
+  withProps(ServiceProvider, {
+    factory: () => Database.create(),
+    fallback: <Loader />,
+  }),
+  ImageProvider,
+  Router,
+  withProps(Suspense, { fallback: <Loader /> }),
+  () => {
+    useEffect(() => {
+      resumeCollection();
+    }, []);
+
+    return (
+      <Switch>
+        {Object.entries(Routes).map(([path, factory]) => (
+          <Route key={path} path={path} component={lazy(factory)} />
+        ))}
+        <Route>
+          <Redirect to="/gallery" />
+        </Route>
+      </Switch>
+    );
+  },
+);
 
 export default App;
