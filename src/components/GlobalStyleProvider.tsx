@@ -47,3 +47,5 @@ export const GlobalStyleProvider: React.FC = nest(
     );
   },
 );
+
+export default GlobalStyleProvider;

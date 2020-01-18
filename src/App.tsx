@@ -10,8 +10,9 @@ import {
 import { ImageProvider } from './hooks/useImages';
 import { withProps, nest } from './libs/hocUtils';
 import { resumeCollection } from './libs/connectorUtils';
+
 import Loader from './components/Loader';
-import { GlobalStyleProvider } from './components/GlobalStyleProvider';
+import GlobalStyleProvider from './components/GlobalStyleProvider';
 
 const Routes = {
   '/connectors': () => import('./components/ConnectorScreen'),
