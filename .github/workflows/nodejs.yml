@@ -16,11 +16,15 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: npm install, build, and test
+      - name: Build package
         run: |
           npm ci
           npm run lint
-          npm run test
           npm run package
+      - name: Upload package
+        uses: actions/upload-artifact@v1
+        with:
+          name: dist
+          path: dist
         env:
           CI: true
