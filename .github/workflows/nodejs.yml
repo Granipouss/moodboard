@@ -3,7 +3,7 @@ name: Node CI
 on: [push]
 
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-latest
 
     strategy:
@@ -25,6 +25,32 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: dist-linux
+          path: dist
+        env:
+          CI: true
+
+  build-windows:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Build package
+        run: |
+          npm ci
+          npm run lint
+          npm run package -- -w
+      - name: Upload package
+        uses: actions/upload-artifact@v1
+        with:
+          name: dist-windows
           path: dist
         env:
           CI: true
