@@ -1,5 +1,6 @@
 import { Service } from 'typedi';
 
+import { sleep } from '../../../libs/utils';
 import { Database } from '../../../services/database';
 import { Image } from '../../../entities/image';
 import { IConnector } from '../connector.interface';
@@ -28,6 +29,7 @@ export class TumblrConnector implements IConnector {
       this.database.setConstant(TOKEN, token),
       this.database.setConstant(SECRET, secret),
     ]);
+    await sleep(1e3);
     // Non blocking
     this.resumeCollection();
   }

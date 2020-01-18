@@ -4,17 +4,16 @@ import { createConnection, ConnectionOptions, Connection } from 'typeorm';
 import { Constant } from '../../entities/constant';
 import { Image } from '../../entities/image';
 
-const options: ConnectionOptions = {
-  type: 'sqlite',
-  database: `./db.sqlite`,
-  entities: [Constant, Image],
-  synchronize: true,
-  logging: true,
-};
-
 @Service()
 export class Database {
   public static async create(): Promise<Database> {
+    const options: ConnectionOptions = {
+      type: 'sqlite',
+      database: './db.sqlite',
+      entities: [Constant, Image],
+      synchronize: true,
+      logging: true,
+    };
     const connection = await createConnection(options);
     return new Database(connection);
   }

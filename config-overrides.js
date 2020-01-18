@@ -28,8 +28,16 @@ const takeControlOverTypescript = () => config => {
   return config;
 };
 
+/** @type {() => (config: Configuration) => Configuration} */
+const keepClassesAndFunctionsName = () => config => {
+  // TODO: Keep only the names not all the fluff
+  config.optimization.minimize = false;
+  return config;
+};
+
 module.exports = override(
   setWebpackTarget('electron-renderer'),
   addWebpackExternals({ typeorm: 'require("typeorm")' }),
   takeControlOverTypescript(),
+  keepClassesAndFunctionsName(),
 );
