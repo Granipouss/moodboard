@@ -6,13 +6,14 @@ import { Database } from './database';
 
 @Service()
 export class ImageRepository {
-  private repository: Repository<Image>;
+  private repositoryPromise: Promise<Repository<Image>>;
   constructor(database: Database) {
-    this.repository = database.getRepository(Image);
+    this.repositoryPromise = database.getRepository(Image);
   }
 
-  getRandom(count: number): Promise<Image[]> {
-    return this.repository
+  async getRandom(count: number): Promise<Image[]> {
+    const repository = await this.repositoryPromise;
+    return repository
       .createQueryBuilder()
       .where({ url: Not(Like('%.gif')) })
       .orderBy('RANDOM()')
@@ -20,7 +21,8 @@ export class ImageRepository {
       .getMany();
   }
 
-  save(images: Image[]): Promise<Image[]> {
-    return this.repository.save(images);
+  async save(images: Image[]): Promise<void> {
+    const repository = await this.repositoryPromise;
+    repository.save(images);
   }
 }

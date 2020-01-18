@@ -6,26 +6,28 @@ import { Database } from './database';
 
 @Service()
 export class ConstantRepository {
-  private repository: Repository<Constant>;
+  private repositoryPromise: Promise<Repository<Constant>>;
   constructor(database: Database) {
-    this.repository = database.getRepository(Constant);
+    this.repositoryPromise = database.getRepository(Constant);
   }
 
   async set(name: string, value: string) {
-    const existing = await this.repository.findOne(name);
+    const repository = await this.repositoryPromise;
+    const existing = await repository.findOne(name);
     if (existing) {
       existing.value = value;
-      this.repository.save(existing);
+      repository.save(existing);
     } else {
       const constant = new Constant();
       constant.name = name;
       constant.value = value;
-      this.repository.save(constant);
+      repository.save(constant);
     }
   }
 
   async get(name: string) {
-    const existing = await this.repository.findOne(name);
+    const repository = await this.repositoryPromise;
+    const existing = await repository.findOne(name);
     return existing ? existing.value : undefined;
   }
 }

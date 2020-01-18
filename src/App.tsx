@@ -7,8 +7,6 @@ import {
   Redirect,
 } from 'react-router-dom';
 
-import { Database } from './services/database';
-import { ServiceProvider } from './hooks/useService';
 import { ImageProvider } from './hooks/useImages';
 import { withProps, nest } from './libs/hocUtils';
 import { resumeCollection } from './libs/connectorUtils';
@@ -23,10 +21,6 @@ const Routes = {
 
 const App: React.FC = nest(
   GlobalStyleProvider,
-  withProps(ServiceProvider, {
-    factory: () => Database.create(),
-    fallback: <Loader />,
-  }),
   ImageProvider,
   Router,
   withProps(Suspense, { fallback: <Loader /> }),
