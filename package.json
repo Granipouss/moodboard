@@ -15,8 +15,8 @@
     "start:react": "react-app-rewired start",
     "start": "run-p -r start:react start:electron",
     "build": "react-app-rewired build",
-    "prepackage": "yarn build",
-    "package": "electron-builder -wl",
+    "prepackage": "npm run build",
+    "package": "electron-builder",
     "lint": "eslint 'src/**/*.ts' 'src/**/*.tsx'",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject"
@@ -54,6 +54,7 @@
   "dependencies": {
     "electron-is-dev": "^1.1.0",
     "reflect-metadata": "^0.1.13",
+    "resize-observer-polyfill": "^1.5.1",
     "sqlite3": "^4.1.1",
     "typeorm": "^0.2.22"
   },

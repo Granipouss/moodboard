@@ -8,7 +8,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [10.x, 12.x]
+        node-version: [12.x]
 
     steps:
       - uses: actions/checkout@v1
@@ -20,11 +20,11 @@ jobs:
         run: |
           npm ci
           npm run lint
-          npm run package
+          npm run package -- -l
       - name: Upload package
         uses: actions/upload-artifact@v1
         with:
-          name: dist
+          name: dist-linux
           path: dist
         env:
           CI: true
