@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo } from 'react';
+import React, { useReducer, useRef, useEffect, useMemo } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import {
   GridList,
@@ -9,7 +9,9 @@ import {
 } from '@material-ui/core';
 import SyncIcon from '@material-ui/icons/Sync';
 
+import { clamp } from '../libs/utils';
 import { useSize } from '../hooks/useSize';
+import { useKey, useKeys } from '../hooks/useKey';
 import { useIsVisible } from '../hooks/useIsVisible';
 import { useImages, useLoadMoreImages } from '../hooks/useImages';
 
@@ -28,6 +30,28 @@ const useStyles = makeStyles(() =>
   }),
 );
 
+type Dir = 'up' | 'down' | 'left' | 'right';
+
+const cursorMoveReducer = (maxRef: { current: number }) => (
+  current: number,
+  move: number | Dir,
+) => {
+  const bounds = [0, maxRef.current - COLS] as const;
+  if (typeof move === 'number') {
+    // Absolute move
+    return clamp(move, bounds);
+  } else {
+    // Relative move
+    let x = current % COLS;
+    let y = (current - x) / COLS;
+    if (move === 'left') x = (x + COLS - 1) % COLS;
+    if (move === 'right') x = (x + 1) % COLS;
+    if (move === 'down') y += 1;
+    if (move === 'up') y -= 1;
+    return clamp(x + y * COLS, bounds);
+  }
+};
+
 export const GalleryScreen: React.FC = () => {
   const images = useImages();
   const loadMore = useLoadMoreImages();
@@ -44,20 +68,47 @@ export const GalleryScreen: React.FC = () => {
   const { width } = useSize(galleryRef);
   const tileHeight = (width - 3 * SPACING) / COLS;
 
-  // Scroll image into view when index given
-  const tileRefs = useRef<HTMLElement[]>([]);
-  const params = useParams<{ index?: string }>();
-  const index = params.index != null ? Number(params.index) : undefined;
+  const imageCountRef = useRef(0);
   useEffect(() => {
-    if (index != null) {
-      setImmediate(() => {
-        const tile = tileRefs.current[index];
-        if (tile) {
-          tile.scrollIntoView({ behavior: 'auto', block: 'center' });
-        }
-      });
+    imageCountRef.current = images.length;
+  }, [images]);
+
+  const params = useParams<{ index?: string }>();
+  const [cursor, moveCursor] = useReducer(
+    cursorMoveReducer(imageCountRef),
+    Number(params.index || 0),
+  );
+
+  // Disable arrow scroll
+  useKeys(event => {
+    if (event.key.match(/^arrow/i) != null) {
+      event.preventDefault();
     }
-  }, [index]);
+  });
+
+  useKey('ArrowRight', () => moveCursor('right'));
+  useKey('ArrowLeft', () => moveCursor('left'));
+  useKey('ArrowDown', () => moveCursor('down'));
+  useKey('ArrowUp', () => moveCursor('up'));
+
+  const firstScrollRef = useRef(true);
+  const tileRefs = useRef<HTMLElement[]>([]);
+  useEffect(() => {
+    // Wait for height computation
+    if (!tileHeight) return;
+
+    // Do nothing if no DOM element
+    const tile = tileRefs.current[cursor];
+    if (!tile) return;
+
+    // Scroll to element
+    // Instant at first then smooth
+    tile.scrollIntoView({
+      behavior: firstScrollRef.current ? 'auto' : 'smooth',
+      block: 'center',
+    });
+    firstScrollRef.current = false;
+  }, [cursor, tileHeight]);
 
   const history = useHistory();
   const actions = useMemo(
@@ -70,6 +121,8 @@ export const GalleryScreen: React.FC = () => {
     ],
     [history],
   );
+
+  useKey('Enter', () => history.replace(`/view/${cursor}`), [cursor]);
 
   const classes = useStyles();
 
