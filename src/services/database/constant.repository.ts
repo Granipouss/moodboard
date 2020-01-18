@@ -13,16 +13,7 @@ export class ConstantRepository {
 
   async set(name: string, value: string) {
     const repository = await this.repositoryPromise;
-    const existing = await repository.findOne(name);
-    if (existing) {
-      existing.value = value;
-      repository.save(existing);
-    } else {
-      const constant = new Constant();
-      constant.name = name;
-      constant.value = value;
-      repository.save(constant);
-    }
+    await repository.save({ name, value });
   }
 
   async get(name: string) {
