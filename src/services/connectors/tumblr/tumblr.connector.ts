@@ -1,7 +1,10 @@
 import { Service } from 'typedi';
 
 import { sleep } from '../../../libs/utils';
-import { Database } from '../../../services/database';
+import {
+  ImageRepository,
+  ConstantRepository,
+} from '../../../services/database';
 import { Image } from '../../../entities/image';
 import { IConnector } from '../connector.interface';
 
@@ -17,17 +20,21 @@ type Dir = 'before' | 'after' | 'begin';
 
 @Service()
 export class TumblrConnector implements IConnector {
-  constructor(private database: Database, private service: TumblrService) {}
+  constructor(
+    private constants: ConstantRepository,
+    private images: ImageRepository,
+    private service: TumblrService,
+  ) {}
 
   async isActive() {
-    return (await this.database.getConstant(TOKEN)) != null;
+    return (await this.constants.get(TOKEN)) != null;
   }
 
   async activate() {
     const { token, secret } = await this.login();
     await Promise.all([
-      this.database.setConstant(TOKEN, token),
-      this.database.setConstant(SECRET, secret),
+      this.constants.set(TOKEN, token),
+      this.constants.set(SECRET, secret),
     ]);
     await sleep(1e3);
     // Non blocking
@@ -36,10 +43,10 @@ export class TumblrConnector implements IConnector {
 
   async resumeCollection() {
     const [token, secret, cursorAfter, cursorBefore] = await Promise.all([
-      this.database.getConstant(TOKEN),
-      this.database.getConstant(SECRET),
-      this.database.getConstant(CURSOR_AFTER),
-      this.database.getConstant(CURSOR_BEFORE),
+      this.constants.get(TOKEN),
+      this.constants.get(SECRET),
+      this.constants.get(CURSOR_AFTER),
+      this.constants.get(CURSOR_BEFORE),
     ]);
 
     if (!token || !secret) throw new Error('[TUMBLR] No token');
@@ -59,7 +66,7 @@ export class TumblrConnector implements IConnector {
   }
 
   async collectAfter() {
-    let currentCursor = await this.database.getConstant(CURSOR_AFTER);
+    let currentCursor = await this.constants.get(CURSOR_AFTER);
     do {
       const { count, cursor } = await this.collect('after', currentCursor);
       currentCursor = count > 0 ? cursor : undefined;
@@ -67,7 +74,7 @@ export class TumblrConnector implements IConnector {
   }
 
   async collectBefore() {
-    let currentCursor = await this.database.getConstant(CURSOR_BEFORE);
+    let currentCursor = await this.constants.get(CURSOR_BEFORE);
     do {
       const { count, cursor } = await this.collect('before', currentCursor);
       currentCursor = count > 0 ? cursor : undefined;
@@ -77,8 +84,6 @@ export class TumblrConnector implements IConnector {
   async collect(direction: Dir, cursor?: string) {
     // eslint-disable-next-line no-console
     console.log(`[TUMBLR] Collection ${direction} with cursor: ${cursor}`);
-
-    const repository = this.database.imageRepo;
 
     const options = cursor ? JSON.parse(cursor) : undefined;
     const response: LikeResponse = await this.service.getLikes(options);
@@ -99,7 +104,7 @@ export class TumblrConnector implements IConnector {
           image.link = like.post_url;
           return image;
         });
-        return repository.save(images);
+        return this.images.save(images);
       }),
     );
 
@@ -108,13 +113,13 @@ export class TumblrConnector implements IConnector {
     }
 
     if (direction === 'begin' || direction === 'before') {
-      await this.database.setConstant(
+      await this.constants.set(
         CURSOR_BEFORE,
         JSON.stringify(links.next.query_params),
       );
     }
     if (direction === 'begin' || direction === 'after') {
-      await this.database.setConstant(
+      await this.constants.set(
         CURSOR_AFTER,
         JSON.stringify(links.prev.query_params),
       );

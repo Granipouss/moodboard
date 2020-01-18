@@ -3,9 +3,9 @@ import { useCallback } from 'react';
 import { Image } from '../entities/image';
 
 import { createStateContext } from '../libs/createStateContext';
+import { ImageRepository } from '../services/database';
 
 import { useService } from './useService';
-import { Database } from '../services/database';
 
 const [useImageList, ImageProvider] = createStateContext<Image[]>([]);
 
@@ -16,23 +16,18 @@ export const useImages = () => {
 
 let isLoadingMore = false;
 export const useLoadMoreImages = () => {
-  const database = useService(Database);
+  const repository = useService(ImageRepository);
   const [, setImages] = useImageList();
 
   return useCallback(
-    async (n: number) => {
+    async (count: number) => {
       if (isLoadingMore) return;
       isLoadingMore = true;
-      const newImages = await database.imageRepo.query(`
-        SELECT * FROM image
-        WHERE url NOT LIKE '%.gif'
-        ORDER BY RANDOM()
-        LIMIT ${n};
-      `);
+      const newImages = await repository.getRandom(count);
       setImages(oldImages => [...oldImages, ...newImages]);
       isLoadingMore = false;
     },
-    [database, setImages],
+    [repository, setImages],
   );
 };
 
