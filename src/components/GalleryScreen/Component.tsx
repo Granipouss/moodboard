@@ -1,5 +1,4 @@
 import React, { useRef, useEffect, useMemo } from 'react';
-import { GridList, GridListTile } from '@material-ui/core';
 import SyncIcon from '@material-ui/icons/Sync';
 
 import { useKey } from '../../hooks/useKey';
@@ -9,18 +8,18 @@ import { useNavigation } from '../../hooks/useNavigation';
 
 import ActionMenu from '../ActionMenu';
 
-import { GRID_COLS, GRID_SPACING } from './constants';
 import { useCursorNavigation } from './useCursorNavigation';
 import { useScrollControl } from './useScrollControl';
 import LoadTrigger from './LoadTrigger';
+import GridContainer from './GridContainer';
+import GridTile from './GridTile';
 
 export const GalleryScreen: React.FC = () => {
   const images = useImages();
 
   // Ensure that tiles are squared
-  const galleryRef = useRef<HTMLElement>(null);
+  const galleryRef = useRef<HTMLUListElement>(null);
   const { width } = useSize(galleryRef);
-  const tileHeight = (width - 3 * GRID_SPACING) / GRID_COLS;
 
   const navigate = useNavigation();
 
@@ -46,31 +45,20 @@ export const GalleryScreen: React.FC = () => {
   useKey('Enter', () => navigate.toView(cursor), [cursor]);
 
   return (
-    <>
-      <GridList
-        ref={galleryRef}
-        cols={GRID_COLS}
-        spacing={GRID_SPACING}
-        cellHeight={tileHeight}
-      >
-        {images.map((tile, index) => (
-          <GridListTile
+    <main>
+      <GridContainer ref={galleryRef}>
+        {images.map((image, index) => (
+          <GridTile
             key={index}
-            ref={el => (tileRefs.current[index] = el as HTMLElement)}
+            image={image}
+            selected={cursor === index}
             onClick={() => navigate.toView(index)}
-            style={{
-              cursor: 'pointer',
-              border: cursor === index ? `1px solid white` : ``,
-            }}
-          >
-            <img src={tile.url} alt={tile.id} />
-          </GridListTile>
+            ref={el => (tileRefs.current[index] = el as HTMLElement)}
+          />
         ))}
-      </GridList>
-
+      </GridContainer>
       <LoadTrigger />
-
       <ActionMenu actions={actions} />
-    </>
+    </main>
   );
 };
