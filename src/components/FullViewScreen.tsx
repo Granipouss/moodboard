@@ -8,6 +8,7 @@ import DashboardIcon from '@material-ui/icons/Dashboard';
 import OpenInBrowserIcon from '@material-ui/icons/OpenInBrowser';
 import SyncIcon from '@material-ui/icons/Sync';
 
+import { useKey } from '../hooks/useKey';
 import { useImages, useLoadMoreImages } from '../hooks/useImages';
 
 import Loader from './Loader';
@@ -82,6 +83,22 @@ const FullViewSreen: React.FC = () => {
     ],
     [history, index, image],
   );
+
+  // Keyboard Navigation
+  useKey('ArrowRight', () => history.replace(`/view/${index + 1}`), [
+    history,
+    index,
+  ]);
+  useKey(
+    'ArrowLeft',
+    () => history.replace(`/view/${Math.max(0, index - 1)}`),
+    [history, index],
+  );
+  useKey('ArrowDown', () => history.replace(`/gallery/${index}`), [
+    history,
+    index,
+  ]);
+  useKey('ArrowUp', () => shell.openExternal(image.url), [image]);
 
   if (!image) {
     return <Loader />;
