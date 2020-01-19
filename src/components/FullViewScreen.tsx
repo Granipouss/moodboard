@@ -1,6 +1,6 @@
 import { shell } from 'electron';
 import React, { useEffect, useMemo } from 'react';
-import { useParams, Link, useHistory } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { makeStyles, createStyles } from '@material-ui/core';
 import NavigateBeforeIcon from '@material-ui/icons/NavigateBefore';
 import NavigateNextIcon from '@material-ui/icons/NavigateNext';
@@ -9,6 +9,7 @@ import OpenInBrowserIcon from '@material-ui/icons/OpenInBrowser';
 import SyncIcon from '@material-ui/icons/Sync';
 
 import { useKey } from '../hooks/useKey';
+import { useNavigation } from '../hooks/useNavigation';
 import { useImages, useLoadMoreImages } from '../hooks/useImages';
 
 import Loader from './Loader';
@@ -62,13 +63,13 @@ const FullViewSreen: React.FC = () => {
 
   const classes = useStyles({});
 
-  const history = useHistory();
+  const navigate = useNavigation();
   const actions = useMemo(
     () => [
       {
         icon: <DashboardIcon />,
         label: 'Gallery',
-        run: () => history.replace(`/gallery/${index}`),
+        run: () => navigate.toGallery(index),
       },
       {
         icon: <OpenInBrowserIcon />,
@@ -78,26 +79,16 @@ const FullViewSreen: React.FC = () => {
       {
         icon: <SyncIcon />,
         label: 'Synchronize',
-        run: () => history.replace('/connectors'),
+        run: () => navigate.toConnectors(),
       },
     ],
-    [history, index, image],
+    [navigate, index, image],
   );
 
   // Keyboard Navigation
-  useKey('ArrowRight', () => history.replace(`/view/${index + 1}`), [
-    history,
-    index,
-  ]);
-  useKey(
-    'ArrowLeft',
-    () => history.replace(`/view/${Math.max(0, index - 1)}`),
-    [history, index],
-  );
-  useKey('ArrowDown', () => history.replace(`/gallery/${index}`), [
-    history,
-    index,
-  ]);
+  useKey('ArrowRight', () => navigate.toView(index + 1), [index]);
+  useKey('ArrowLeft', () => navigate.toView(index - 1), [index]);
+  useKey('ArrowDown', () => navigate.toGallery(index), [index]);
   useKey('ArrowUp', () => shell.openExternal(image.url), [image]);
 
   if (!image) {

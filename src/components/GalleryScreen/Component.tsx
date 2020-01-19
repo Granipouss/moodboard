@@ -1,11 +1,11 @@
 import React, { useRef, useEffect, useMemo } from 'react';
-import { useHistory } from 'react-router-dom';
 import { GridList, GridListTile } from '@material-ui/core';
 import SyncIcon from '@material-ui/icons/Sync';
 
 import { useKey } from '../../hooks/useKey';
 import { useSize } from '../../hooks/useSize';
 import { useImages } from '../../hooks/useImages';
+import { useNavigation } from '../../hooks/useNavigation';
 
 import ActionMenu from '../ActionMenu';
 
@@ -22,6 +22,8 @@ export const GalleryScreen: React.FC = () => {
   const { width } = useSize(galleryRef);
   const tileHeight = (width - 3 * GRID_SPACING) / GRID_COLS;
 
+  const navigate = useNavigation();
+
   const imageCountRef = useRef(0);
   useEffect(() => void (imageCountRef.current = images.length), [images]);
 
@@ -30,19 +32,18 @@ export const GalleryScreen: React.FC = () => {
   const tileRefs = useRef<(HTMLElement | null)[]>([]);
   useScrollControl(cursor, width, tileRefs);
 
-  const history = useHistory();
   const actions = useMemo(
     () => [
       {
         icon: <SyncIcon />,
         label: 'Synchronize',
-        run: () => history.replace('/connectors'),
+        run: () => navigate.toConnectors(),
       },
     ],
-    [history],
+    [navigate],
   );
 
-  useKey('Enter', () => history.replace(`/view/${cursor}`), [cursor]);
+  useKey('Enter', () => navigate.toView(cursor), [cursor]);
 
   return (
     <>
@@ -56,7 +57,7 @@ export const GalleryScreen: React.FC = () => {
           <GridListTile
             key={index}
             ref={el => (tileRefs.current[index] = el as HTMLElement)}
-            onClick={() => history.replace(`/view/${index}`)}
+            onClick={() => navigate.toView(index)}
             style={{
               cursor: 'pointer',
               border: cursor === index ? `1px solid white` : ``,
