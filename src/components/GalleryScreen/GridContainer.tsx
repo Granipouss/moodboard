@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react';
-import { makeStyles, createStyles } from '@material-ui/core';
+import { makeStyles, createStyles, Backdrop } from '@material-ui/core';
 
 const useStyles = makeStyles(() =>
   createStyles({
@@ -20,9 +20,12 @@ export const GridContainer = forwardRef<
   const classes = useStyles();
 
   return (
-    <ul className={classes.root} ref={ref}>
-      {children}
-    </ul>
+    <>
+      <Backdrop open style={{ zIndex: 1 }} />
+      <ul className={classes.root} ref={ref}>
+        {children}
+      </ul>
+    </>
   );
 });
 
